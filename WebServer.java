@@ -1,28 +1,45 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.lang.Thread;
 
-class WebServer {
+class WebServer implements Runnable{
+	// Client Connection via Socket Class
+	private Socket connectionSocket;
+
+	public WebServer(Socket connec) {
+		this.connectionSocket = connec;
+	}
+
 	public static void main(String argv[]) throws Exception {
-		String requestMessageLine;
-		String fileName;
-		String capitalizedSentence;
-
-		ServerSocket listenSocket = new ServerSocket(6789);
-		Socket connectionSocket = listenSocket.accept();
-
-		BufferedReader inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-
-		DataOutputStream outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-
 		while(true){
+			ServerSocket listenSocket = new ServerSocket(6789);
+			WebServer myServer = new WebServer(listenSocket.accept());
+			
+			// create dedicated thread to manage the client connection
+			Thread thread = new Thread(myServer);
+			thread.start();
+		}
+	}
+
+	public void run() {
+		String requestMessageLine = null;
+		String fileName = null;
+		String capitalizedSentence = null;
+		BufferedReader inFromClient = null;
+		DataOutputStream outToClient = null;
+
+		try {
+			inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+			outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+		
 			requestMessageLine = inFromClient.readLine();
 			
-			if (requestMessageLine == null)
-				break;
+			// if (requestMessageLine == null)
+			// 	break;
 			
-			if (requestMessageLine.equals("exit"))
-				break;
+			// if (requestMessageLine.equals("exit"))
+			// 	break;
 			
 			System.out.println(requestMessageLine);
 
@@ -92,7 +109,8 @@ class WebServer {
 			}
 			else
 				System.out.println("Bad Request Message");
-			
+		} catch (Exception e) {
+			//TODO: handle exception
 		}
 	}
 }
