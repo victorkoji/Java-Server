@@ -2,6 +2,9 @@ import java.io.*;
 import java.net.*;
 
 class TCPServer { 
+
+	static final int PORT = 6789;
+
 	public static void main(String argv[]) throws Exception { 
 		String clientSentence; 
 		String capitalizedSentence;
@@ -34,7 +37,7 @@ class TCPServer {
 			
 				capitalizedSentence = clientSentence.toUpperCase() + '\n';
 			    
-				// outToClient.writeBytes(capitalizedSentence);
+				outToClient.writeBytes(capitalizedSentence);
 			}
 			connectionSocket.close();
 		}
