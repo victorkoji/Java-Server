@@ -1,0 +1,1 @@
+netstat -ano | findstr 8080  -> Para ficar observando a criação de novas Threads 

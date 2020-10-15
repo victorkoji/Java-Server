@@ -13,13 +13,17 @@ class WebServer implements Runnable{
 
 	public static void main(String argv[]) throws Exception {
 		try {
+			// Listen(escuta) a porta 8080 => Aceita a conexão na porta passada abaixo
 			ServerSocket listenSocket = new ServerSocket(8080);
 
 			while(true){
-				WebServer myServer = new WebServer(listenSocket.accept());
+				// Cria-se um objeto socket
+				WebServer myServer = new WebServer(listenSocket.accept()); 
 				
-				// create dedicated thread to manage the client connection
+				// Cria-se Threads para realizar novas conexões para cada Client
 				Thread thread = new Thread(myServer);
+
+				// Inicia usando o método 'public void run()'
 				thread.start();
 			}
 		} catch (IOException e) {
@@ -36,16 +40,21 @@ class WebServer implements Runnable{
 
 		try {
 			while(true){
+				// Entrada da informação Client -> Server
 				inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
+
+				// Saída da informação Server -> Client
 				outToClient = new DataOutputStream(connectionSocket.getOutputStream());
 			
 				requestMessageLine = inFromClient.readLine();
 				
-				if (requestMessageLine == null)
-					break;
+				// if (requestMessageLine == null)
+				// 	break;
 				
-				if (requestMessageLine.equals("exit"))
+				if (requestMessageLine.equals("exit")){
+					outToClient.writeBytes("Conexao finalizada . . .");
 					break;
+				}
 				
 				System.out.println(requestMessageLine);
 
@@ -115,7 +124,7 @@ class WebServer implements Runnable{
 					System.out.println("Bad Request Message");
 			}
 		} catch (Exception e) {
-			//TODO: handle exception
+			
 		}
 	}
 }
