@@ -13,18 +13,39 @@ class WebServer implements Runnable{
 
 	public static void main(String argv[]) throws Exception {
 		try {
+			//Lê a partir da linha de comando
+			Scanner texto = new Scanner(System.in);
+			System.out.print("Qual modo de operacao: ");
+			String [] parametro  = texto.nextLine().split("\\s+");
+
+			String modo = parametro[1];
+			int porta = Integer.parseInt(parametro[2]);
+
 			// Listen(escuta) a porta 8080 => Aceita a conexão na porta passada abaixo
-			ServerSocket listenSocket = new ServerSocket(8080);
+			ServerSocket listenSocket = new ServerSocket(porta);
+			System.err.println("Servidor rodando...");
+			System.err.println("Porta: " + porta);
 
 			while(true){
-				// Cria-se um objeto socket
-				WebServer myServer = new WebServer(listenSocket.accept()); 
-				
-				// Cria-se Threads para realizar novas conexões para cada Client
-				Thread thread = new Thread(myServer);
+				switch (modo) {
+					case "-f": // Cria Processos
+						
+						break;
+					case "-t": // Cria Threads
 
-				// Inicia usando o método 'public void run()'
-				thread.start();
+						// Cria-se um objeto socket
+						WebServer myServer = new WebServer(listenSocket.accept()); 
+						
+						// Cria-se Threads para realizar novas conexões para cada Client
+						Thread thread = new Thread(myServer);
+
+						// Inicia usando o método 'public void run()'
+						thread.start();
+						break;
+				
+					default:
+						break;
+				}
 			}
 		} catch (IOException e) {
 			System.err.println("Server Connection error : " + e.getMessage());
@@ -99,7 +120,8 @@ class WebServer implements Runnable{
 						inFile.read(fileInBytes);
 						
 						outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n");
-
+						outToClient.writeBytes("Server: FACOMCD-2020/1.0\r\n");
+						
 						if (fileName.endsWith(".jpg"))
 							outToClient.writeBytes("Content-Type: image/jpeg\r\n");
 					
@@ -118,13 +140,16 @@ class WebServer implements Runnable{
 					}
 					catch (IOException e) {
 						outToClient.writeBytes("HTTP/1.1 404 File not found\r\n");
+						outToClient.writeBytes("Server: FACOMCD-2020/1.0\r\n");
+						outToClient.writeBytes("Content-Type: text/plain\r\n");
+						outToClient.writeBytes("Nao pode encontrar essa url\r\n");
 					}
 				}
 				else
 					System.out.println("Bad Request Message");
 			}
 		} catch (Exception e) {
-			
+			System.out.println("Error: " + e);
 		}
 	}
 }
