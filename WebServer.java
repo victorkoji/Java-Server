@@ -11,15 +11,10 @@ class WebServer implements Runnable{
 		this.connectionSocket = connec;
 	}
 
-	public static void main(String argv[]) throws Exception {
+	public static void main(String args[]) throws Exception {
 		try {
-			//Lê a partir da linha de comando
-			Scanner texto = new Scanner(System.in);
-			System.out.print("Qual modo de operacao: ");
-			String [] parametro  = texto.nextLine().split("\\s+");
-
-			String modo = parametro[1];
-			int porta = Integer.parseInt(parametro[2]);
+			String modo = args[0];
+			int porta = Integer.parseInt(args[1]);
 
 			// Listen(escuta) a porta 8080 => Aceita a conexão na porta passada abaixo
 			ServerSocket listenSocket = new ServerSocket(porta);
@@ -29,6 +24,7 @@ class WebServer implements Runnable{
 			while(true){
 				switch (modo) {
 					case "-f": // Cria Processos
+						System.out.print("Não implementado para Java!");
 						
 						break;
 					case "-t": // Cria Threads
@@ -80,8 +76,8 @@ class WebServer implements Runnable{
 				System.out.println(requestMessageLine);
 
 				/** Envia para o cliente uma resposta **/
-				capitalizedSentence = requestMessageLine.toUpperCase() + '\n';
-				outToClient.writeBytes(capitalizedSentence);
+				// capitalizedSentence = requestMessageLine.toUpperCase() + '\n';
+				// outToClient.writeBytes(capitalizedSentence);
 				/** Envia para o cliente uma resposta **/
 
 				StringTokenizer tokenizedLine = new StringTokenizer(requestMessageLine);
@@ -99,15 +95,14 @@ class WebServer implements Runnable{
 							outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n");
 							outToClient.writeBytes("Content-Type: text/html\r\n\r\n");
 							outToClient.writeBytes(
-							"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\r\n" +
+							"<html  xml:lang=\"en\" lang=\"en\">\r\n" +
 							"<head>\r\n" +
 							"<title>Linux/kernel/ - Linux Cross Reference - Free Electrons</title>\r\n" +
 							"</head>\r\n" +
 							"<body>\r\n");
 
-							
 							for (int i = 0; i < names.length; i++) {
-								String line = String.format("<td><a href=\"%s\">%s</a></td>\n", names[i], names[i]);
+								String line = String.format("<td><a href=\"%s\" target='_blank'>%s</a></td>\n", names[i], names[i]);
 								outToClient.writeBytes(line);
 							}
 							outToClient.writeBytes("</body>\r\n");
