@@ -2,11 +2,13 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.lang.Thread;
+import java.nio.file.*;
 
 class WebServer implements Runnable{
-	// Client Connection via Socket Class
+
 	private Socket connectionSocket;
 
+	/** Inicializa a conexão com o socket **/
 	public WebServer(Socket connec) {
 		this.connectionSocket = connec;
 	}
@@ -38,9 +40,6 @@ class WebServer implements Runnable{
 						// Inicia usando o método 'public void run()'
 						thread.start();
 						break;
-				
-					default:
-						break;
 				}
 			}
 		} catch (IOException e) {
@@ -64,10 +63,7 @@ class WebServer implements Runnable{
 				outToClient = new DataOutputStream(connectionSocket.getOutputStream());
 			
 				requestMessageLine = inFromClient.readLine();
-				
-				// if (requestMessageLine == null)
-				// 	break;
-				
+			
 				if (requestMessageLine.equals("exit")){
 					outToClient.writeBytes("Conexao finalizada . . .");
 					break;
@@ -90,6 +86,7 @@ class WebServer implements Runnable{
 						File file = new File(fileName);
 						int numOfBytes = (int)file.length();
 
+						/** Se for um diretório **/
 						if (file.isDirectory()) {
 							String[] names = file.list();
 							outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n");
@@ -102,36 +99,46 @@ class WebServer implements Runnable{
 							"<body>\r\n");
 
 							for (int i = 0; i < names.length; i++) {
-								String line = String.format("<td><a href=\"%s\" target='_blank'>%s</a></td>\n", names[i], names[i]);
+								String line = String.format("<td><a href=\"/%s/%s\">%s</a></td>\n", fileName, names[i], names[i]);
 								outToClient.writeBytes(line);
 							}
 							outToClient.writeBytes("</body>\r\n");
-							return;
+							connectionSocket.close();
+						
+						}else{/** Se for um arquivo **/
+
+							/** Inicializa as variáveis para abrir o arquivo **/
+							Path path = file.toPath();
+							FileInputStream inFile = new FileInputStream(fileName);
+							byte[] fileInBytes = new byte[numOfBytes];
+							String contentType = Files.probeContentType(path);
+
+							inFile.read(fileInBytes);
+							
+							outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n");
+							outToClient.writeBytes("Server: FACOMCD-2020/1.0\r\n");
+							
+							/** Verifica qual é a extensão do arquivo e coloca o content type de acordo essa extensão. **/
+
+							// if (fileName.endsWith(".gif"))
+							// 	outToClient.writeBytes("Content-Type: image/gif\r\n");
+
+							// if (fileName.endsWith(".txt"))
+							// 	outToClient.writeBytes("Content-Type: text/plain\r\n");
+
+							// if (fileName.endsWith(".html")){
+							// 	outToClient.writeBytes("Content-Type: text/html; charset=utf-8\r\n");
+							// 	// outToClient.writeBytes("Content-Type: multipart/form-data; boundary=something\r\n");
+							// }
+							
+							outToClient.writeBytes("Content-Type: "+contentType+"\r\n");
+							outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
+							
+							outToClient.writeBytes("\r\n");
+							outToClient.write(fileInBytes, 0, numOfBytes);
+
+							connectionSocket.close();
 						}
-						
-						FileInputStream inFile = new FileInputStream(fileName);
-						byte[] fileInBytes = new byte[numOfBytes];
-
-						inFile.read(fileInBytes);
-						
-						outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n");
-						outToClient.writeBytes("Server: FACOMCD-2020/1.0\r\n");
-						
-						if (fileName.endsWith(".jpg"))
-							outToClient.writeBytes("Content-Type: image/jpeg\r\n");
-					
-						if (fileName.endsWith(".gif"))
-							outToClient.writeBytes("Content-Type: image/gif\r\n");
-
-						if (fileName.endsWith(".txt"))
-							outToClient.writeBytes("Content-Type: text/plain\r\n");
-
-						outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
-						
-						outToClient.writeBytes("\r\n");
-						outToClient.write(fileInBytes, 0, numOfBytes);
-
-						connectionSocket.close();
 					}
 					catch (IOException e) {
 						outToClient.writeBytes("HTTP/1.1 404 File not found\r\n");
