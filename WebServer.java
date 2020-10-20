@@ -80,29 +80,19 @@ class WebServer implements Runnable{
 
 				if (tokenizedLine.nextToken().equals("GET")) {
 					fileName = tokenizedLine.nextToken();
-					if (fileName.startsWith("/") == true)
+
+					if(fileName.equals("/"))
+						fileName = "public";
+					else if (fileName.startsWith("/") == true)
 						fileName = fileName.substring(1);
+
 					try {
 						File file = new File(fileName);
 						int numOfBytes = (int)file.length();
 
 						/** Se for um diretório **/
 						if (file.isDirectory()) {
-							String[] names = file.list();
-							outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n");
-							outToClient.writeBytes("Content-Type: text/html\r\n\r\n");
-							outToClient.writeBytes(
-							"<html  xml:lang=\"en\" lang=\"en\">\r\n" +
-							"<head>\r\n" +
-							"<title>Linux/kernel/ - Linux Cross Reference - Free Electrons</title>\r\n" +
-							"</head>\r\n" +
-							"<body>\r\n");
-
-							for (int i = 0; i < names.length; i++) {
-								String line = String.format("<td><a href=\"/%s/%s\">%s</a></td>\n", fileName, names[i], names[i]);
-								outToClient.writeBytes(line);
-							}
-							outToClient.writeBytes("</body>\r\n");
+							listarItensDiretorio(file, outToClient);
 							connectionSocket.close();
 						
 						}else{/** Se for um arquivo **/
@@ -153,5 +143,55 @@ class WebServer implements Runnable{
 		} catch (Exception e) {
 			System.out.println("Error: " + e);
 		}
+	}
+
+	/**
+	 * 1ª Documentação - 19/10/2020, por Victor Koji
+	 * 
+	 * O que faz: Essa função lista os itens de um diretório.
+	 * 
+	 * Usado em: Threads
+	 * 
+	 * @param file - Recebe o um objeto da classe File
+	 * @param outToClient - Recebe o um objeto da classe DataOutputStream
+	 */
+	private void listarItensDiretorio(File file, DataOutputStream outToClient) throws IOException{
+		String[] names = file.list();
+		File[] caminhos = file.listFiles();
+
+		outToClient.writeBytes(
+			"HTTP/1.0 200 Document Follows\r\n" +
+			"Content-Type: text/html\r\n\r\n" +
+			"<html  xml:lang=\"en\" lang=\"en\">\r\n" +
+			"<head>\r\n" +
+			"<title>Linux/kernel/ - Linux Cross Reference - Free Electrons</title>\r\n" +
+			"</head>\r\n" +
+			"<body>\r\n"
+		);
+		String line = String.format("<table>\n");
+		line += String.format("<tr><th>Nome</th><th>Tipo</th></tr>\n");
+
+		/** Percorre os itens que estão dentro do diretório **/
+		for (int i = 0; i < names.length; i++) {
+			Path path = caminhos[i].toPath();
+			String contentType = Files.probeContentType(path);
+
+			/** Se for nulo, é uma pasta. Se não for, é um tipo de arquivo **/
+			if(contentType == null)
+				contentType = "Pasta";
+
+			line += String.format("<tr><td><a href=\"/%s/%s\">%s</a></td><td>%s</td></tr>\n", file, names[i], names[i], contentType);
+		}
+
+		String pathVoltar = file.getParent();
+
+		if(pathVoltar == null)
+			pathVoltar = "./";
+
+		line += String.format("<tr><td><a href=\"/%s\">Voltar</a></td></tr>\n", pathVoltar);
+		line += String.format("</table>\n");
+		outToClient.writeBytes(line);
+
+		outToClient.writeBytes("</body>\r\n");
 	}
 }
