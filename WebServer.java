@@ -15,8 +15,8 @@ class WebServer implements Runnable{
 
 	public static void main(String args[]) throws Exception {
 		try {
-			String modo = args[0];
-			int porta = Integer.parseInt(args[1]);
+			String modo = args[1];
+			int porta = Integer.parseInt(args[2]);
 
 			// Listen(escuta) a porta 8080 => Aceita a conexão na porta passada abaixo
 			ServerSocket listenSocket = new ServerSocket(porta);
@@ -71,11 +71,6 @@ class WebServer implements Runnable{
 				
 				System.out.println(requestMessageLine);
 
-				/** Envia para o cliente uma resposta **/
-				// capitalizedSentence = requestMessageLine.toUpperCase() + '\n';
-				// outToClient.writeBytes(capitalizedSentence);
-				/** Envia para o cliente uma resposta **/
-
 				StringTokenizer tokenizedLine = new StringTokenizer(requestMessageLine);
 
 				if (tokenizedLine.nextToken().equals("GET")) {
@@ -109,18 +104,6 @@ class WebServer implements Runnable{
 							outToClient.writeBytes("Server: FACOMCD-2020/1.0\r\n");
 							
 							/** Verifica qual é a extensão do arquivo e coloca o content type de acordo essa extensão. **/
-
-							// if (fileName.endsWith(".gif"))
-							// 	outToClient.writeBytes("Content-Type: image/gif\r\n");
-
-							// if (fileName.endsWith(".txt"))
-							// 	outToClient.writeBytes("Content-Type: text/plain\r\n");
-
-							// if (fileName.endsWith(".html")){
-							// 	outToClient.writeBytes("Content-Type: text/html; charset=utf-8\r\n");
-							// 	// outToClient.writeBytes("Content-Type: multipart/form-data; boundary=something\r\n");
-							// }
-							
 							outToClient.writeBytes("Content-Type: "+contentType+"\r\n");
 							outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
 							
@@ -159,6 +142,7 @@ class WebServer implements Runnable{
 		String[] names = file.list();
 		File[] caminhos = file.listFiles();
 
+		/** Monta a header **/
 		outToClient.writeBytes(
 			"HTTP/1.0 200 Document Follows\r\n" +
 			"Content-Type: text/html\r\n\r\n" +
@@ -180,18 +164,18 @@ class WebServer implements Runnable{
 			if(contentType == null)
 				contentType = "Pasta";
 
+			/** Cria os links para a pasta ou arquivos **/
 			line += String.format("<tr><td><a href=\"/%s/%s\">%s</a></td><td>%s</td></tr>\n", file, names[i], names[i], contentType);
 		}
 
+		/** Busca o caminho pai para podemos fazer o botão de voltar. **/
 		String pathVoltar = file.getParent();
-
 		if(pathVoltar == null)
-			pathVoltar = "./";
+			pathVoltar = "./public";
 
 		line += String.format("<tr><td><a href=\"/%s\">Voltar</a></td></tr>\n", pathVoltar);
 		line += String.format("</table>\n");
 		outToClient.writeBytes(line);
-
 		outToClient.writeBytes("</body>\r\n");
 	}
 }
