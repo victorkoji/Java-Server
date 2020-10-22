@@ -76,20 +76,39 @@ class WebServer implements Runnable{
 				if (tokenizedLine.nextToken().equals("GET")) {
 					fileName = tokenizedLine.nextToken();
 
-					if(fileName.equals("/"))
-						fileName = "public";
+					if(fileName.equals("/") || fileName.equals(""))
+						fileName = "public/";
 					else if (fileName.startsWith("/") == true)
 						fileName = fileName.substring(1);
 
 					try {
 						File file = new File(fileName);
 						int numOfBytes = (int)file.length();
-
-						/** Se for um diretório **/
-						if (file.isDirectory()) {
-							listarItensDiretorio(file, outToClient);
-							connectionSocket.close();
 						
+						/** Verifica se o getParent é diferente de nulo e se é dentro do cgi-bin, executamos o script **/
+						if(file.getParent() != null && file.getParent().equals("cgi-bin")){
+
+							String query = file.getPath().split("\\?")[1];
+
+							ProcessBuilder pb = new ProcessBuilder("perl", "./cgi-bin/printenv.pl");
+							Map<String, String> env = pb.environment();
+							env.put("QUERY_STRING", query);
+					
+							Process proc = pb.start();		
+							// obtain the input stream
+							InputStream is = proc.getInputStream();
+							InputStreamReader isr = new InputStreamReader(is);
+							BufferedReader br = new BufferedReader(isr);
+							// read what is returned by the command
+							String line;
+							while ( (line = br.readLine()) != null){
+								System.out.println(line);
+							}
+						
+							br.close();
+
+						} else if (file.isDirectory()) { /** Se for um diretório **/
+							listarItensDiretorio(file, outToClient);
 						}else{/** Se for um arquivo **/
 
 							/** Inicializa as variáveis para abrir o arquivo **/
@@ -117,9 +136,9 @@ class WebServer implements Runnable{
 							
 							outToClient.writeBytes("\r\n");
 							outToClient.write(fileInBytes, 0, numOfBytes);
-
-							connectionSocket.close();
 						}
+
+						connectionSocket.close();
 					}
 					catch (IOException e) {
 						outToClient.writeBytes("HTTP/1.1 404 File not found\r\n");

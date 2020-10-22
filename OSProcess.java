@@ -16,11 +16,10 @@ public class OSProcess {
 		if (commandLine.equals("exit"))
 			break;
 
-		ProcessBuilder pb = new ProcessBuilder(commandLine);
+		ProcessBuilder pb = new ProcessBuilder("perl", "printenv.pl");
 		Map<String, String> env = pb.environment();
-		env.put("PARAM1", "PARAM1_VALUE");
-		env.put("PARAM2", "PARAM2_VALUE");
-		
+		env.put("QUERY_STRING", "{<var>=<val>}*{<var>=<val>}");
+
 		Process proc = pb.start();		
 		// obtain the input stream
 		InputStream is = proc.getInputStream();
