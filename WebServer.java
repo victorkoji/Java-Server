@@ -111,7 +111,7 @@ class WebServer implements Runnable{
 
 							// /** Adiciona o downlaod do arquivo pdf **/
 							// if (fileName.endsWith(".pdf"))
-							// 	outToClient.writeBytes("Content-Disposition: attachment; filename=filename.pdf\r\n");
+							// 	outToClient.writeBytes("Content-Disposition: attachment; filename="+file.getName()+"\r\n");
 
 							outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
 							
