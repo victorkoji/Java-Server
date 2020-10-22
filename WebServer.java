@@ -102,9 +102,17 @@ class WebServer implements Runnable{
 							
 							outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n");
 							outToClient.writeBytes("Server: FACOMCD-2020/1.0\r\n");
-							
 							/** Verifica qual é a extensão do arquivo e coloca o content type de acordo essa extensão. **/
 							outToClient.writeBytes("Content-Type: "+contentType+"\r\n");
+
+							// /** Adiciona o downlaod do arquivo txt **/
+							// if (fileName.endsWith(".txt"))
+							// 	outToClient.writeBytes("Content-Type: multipart/form-data; boundary=something\r\n");
+
+							// /** Adiciona o downlaod do arquivo pdf **/
+							// if (fileName.endsWith(".pdf"))
+							// 	outToClient.writeBytes("Content-Disposition: attachment; filename=filename.pdf\r\n");
+
 							outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
 							
 							outToClient.writeBytes("\r\n");
