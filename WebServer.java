@@ -105,13 +105,13 @@ class WebServer implements Runnable{
 							/** Verifica qual é a extensão do arquivo e coloca o content type de acordo essa extensão. **/
 							outToClient.writeBytes("Content-Type: "+contentType+"\r\n");
 
-							// /** Adiciona o downlaod do arquivo txt **/
-							// if (fileName.endsWith(".txt"))
-							// 	outToClient.writeBytes("Content-Type: multipart/form-data; boundary=something\r\n");
+							/** Adiciona o downlaod do arquivo txt **/
+							if (fileName.endsWith(".txt") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".gif") || fileName.endsWith(".png"))
+								outToClient.writeBytes("Content-Type: multipart/form-data; boundary=something\r\n");
 
-							// /** Adiciona o downlaod do arquivo pdf **/
-							// if (fileName.endsWith(".pdf"))
-							// 	outToClient.writeBytes("Content-Disposition: attachment; filename="+file.getName()+"\r\n");
+							/** Adiciona o downlaod do arquivo pdf **/
+							if (fileName.endsWith(".pdf"))
+								outToClient.writeBytes("Content-Disposition: attachment; filename="+file.getName()+"\r\n");
 
 							outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
 							
