@@ -101,7 +101,9 @@ class WebServer implements Runnable{
 							ProcessBuilder pb = new ProcessBuilder(program);
 							Map<String, String> env = pb.environment();
 							env.put("QUERY_STRING", query);
-					
+
+							// pb.redirectError(new File("error")).redirectOutput(new File("output"));
+
 							Process proc = pb.start();		
 							// obtain the input stream
 							InputStream is = proc.getInputStream();
