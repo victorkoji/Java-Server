@@ -88,9 +88,17 @@ class WebServer implements Runnable{
 						/** Verifica se o getParent é diferente de nulo e se é dentro do cgi-bin, executamos o script **/
 						if(file.getParent() != null && file.getParent().equals("cgi-bin")){
 
-							String query = file.getPath().split("\\?")[1];
+							String program = file.getPath(); // Me retorna tudo que está depois do localhost
+							String query = "";
 
-							ProcessBuilder pb = new ProcessBuilder("perl", "./cgi-bin/printenv.pl");
+							/** Verifica se existe o ponto de interrogação, ou seja, possui parâmetros **/
+							if(file.getPath().indexOf('?') != -1){
+								String[] path = file.getPath().split("\\?");
+								program = path[0]; // Antes do ponto de interrogação
+								query = path[1]; // Depois do ponto de interrogação
+							}
+
+							ProcessBuilder pb = new ProcessBuilder(program);
 							Map<String, String> env = pb.environment();
 							env.put("QUERY_STRING", query);
 					
