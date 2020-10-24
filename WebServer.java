@@ -85,7 +85,13 @@ class WebServer implements Runnable{
 					try {
 						File file = new File(fileName);
 						int numOfBytes = (int)file.length();
-						
+
+						//getParent -> retorna valores, digamos, por cada diretorio
+						//Exemplo: [pasta1],[pasta2],[cgi-bin]
+
+						//getPath -> retorna GERAL, pegando tudo depois de localhost
+						//Exemplo: /pasta1/pasta2/cgi-bin
+
 						/** Verifica se o getParent é diferente de nulo e se é dentro do cgi-bin, executamos o script **/
 						if(file.getParent() != null && file.getParent().equals("cgi-bin")){
 
