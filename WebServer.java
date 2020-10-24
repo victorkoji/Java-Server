@@ -53,7 +53,6 @@ class WebServer implements Runnable{
 		String capitalizedSentence = null;
 		BufferedReader inFromClient = null;
 		DataOutputStream outToClient = null;
-		PrintStream output = null;
 		try {
 			while(true){
 				// Entrada da informação Client -> Server
@@ -61,7 +60,6 @@ class WebServer implements Runnable{
 
 				// Saída da informação Server -> Client
 				outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-				output = new PrintStream(connectionSocket.getOutputStream());
 			
 				requestMessageLine = inFromClient.readLine();
 			
@@ -84,7 +82,6 @@ class WebServer implements Runnable{
 
 					try {
 						File file = new File(fileName);
-						int numOfBytes = (int)file.length();
 
 						//getParent -> retorna valores, digamos, por cada diretorio
 						//Exemplo: [pasta1],[pasta2],[cgi-bin]
@@ -93,69 +90,17 @@ class WebServer implements Runnable{
 						//Exemplo: /pasta1/pasta2/cgi-bin
 
 						/** Verifica se o getParent é diferente de nulo e se é dentro do cgi-bin, executamos o script **/
-						if(file.getParent() != null && file.getParent().equals("cgi-bin")){
+						if(file.getParent() != null && file.getParent().equals("cgi-bin"))
+							executarProgramaCgiBin(file, outToClient);
 
-							String program = file.getPath(); // Me retorna tudo que está depois do localhost
-							String query = "";
-
-							/** Verifica se existe o ponto de interrogação, ou seja, possui parâmetros **/
-							if(file.getPath().indexOf('?') != -1){
-								String[] path = file.getPath().split("\\?");
-								program = path[0]; // Antes do ponto de interrogação
-								query = path[1]; // Depois do ponto de interrogação
-							}
-
-							outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n"); // TROCAR
-							outToClient.writeBytes("Content-Type: text/html\r\n"); // TROCAR
-
-							ProcessBuilder pb = new ProcessBuilder(program);
-							Map<String, String> env = pb.environment();
-							env.put("QUERY_STRING", query);
-
-							Process proc = pb.start();		
-							InputStream is = proc.getInputStream();
-							InputStreamReader isr = new InputStreamReader(is);
-							BufferedReader br = new BufferedReader(isr);
-							
-							String line;
-							while ( (line = br.readLine()) != null){
-								// System.out.println(line); // TROCAR
-								output.println(line); // TROCAR
-								output.flush(); // TROCAR
-							}
-
-							br.close();
-
-						} else if (file.isDirectory()) { /** Se for um diretório **/
+						/** Se for um diretório **/
+						else if (file.isDirectory()) 
 							listarItensDiretorio(file, outToClient);
-						}else{/** Se for um arquivo **/
 
-							/** Inicializa as variáveis para abrir o arquivo **/
-							Path path = file.toPath();
-							FileInputStream inFile = new FileInputStream(fileName);
-							byte[] fileInBytes = new byte[numOfBytes];
-							String contentType = Files.probeContentType(path);
-
-							inFile.read(fileInBytes);
-							
-							outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n");
-							outToClient.writeBytes("Server: FACOMCD-2020/1.0\r\n");
-							/** Verifica qual é a extensão do arquivo e coloca o content type de acordo essa extensão. **/
-							outToClient.writeBytes("Content-Type: "+contentType+"\r\n");
-
-							/** Adiciona o downlaod do arquivo txt **/
-							if (fileName.endsWith(".txt") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".gif") || fileName.endsWith(".png"))
-								outToClient.writeBytes("Content-Type: multipart/form-data; boundary=something\r\n");
-
-							/** Adiciona o downlaod do arquivo pdf **/
-							if (fileName.endsWith(".pdf"))
-								outToClient.writeBytes("Content-Disposition: attachment; filename="+file.getName()+"\r\n");
-
-							outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
-							
-							outToClient.writeBytes("\r\n");
-							outToClient.write(fileInBytes, 0, numOfBytes);
-						}
+						/** Se for um arquivo **/
+						else
+							abrirArquivo(file, outToClient);
+						
 
 						connectionSocket.close();
 					}
@@ -175,11 +120,92 @@ class WebServer implements Runnable{
 	}
 
 	/**
+	 * 1ª Documentação - 24/10/2020, por Victor Koji
+	 * 
+	 * O que faz: Essa função irá executar um arquivo cgi e retorna a saida para o client
+	 * 
+	 * Usado em: 
+	 * @param file - Recebe o um objeto da classe File
+	 * @param outToClient - Recebe o um objeto da classe DataOutputStream
+	 * 
+	 */
+	private void executarProgramaCgiBin(File file, DataOutputStream outToClient) throws IOException {
+		PrintStream output = new PrintStream(connectionSocket.getOutputStream());
+		String program = file.getPath(); // Me retorna tudo que está depois do localhost
+		String query = "";
+
+		/** Verifica se existe o ponto de interrogação, ou seja, possui parâmetros **/
+		if(file.getPath().indexOf('?') != -1){
+			String[] path = file.getPath().split("\\?");
+			program = path[0]; // Antes do ponto de interrogação
+			query = path[1]; // Depois do ponto de interrogação
+		}
+
+		outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n"); // TROCAR
+		outToClient.writeBytes("Content-Type: text/html\r\n"); // TROCAR
+
+		ProcessBuilder pb = new ProcessBuilder(program);
+		Map<String, String> env = pb.environment();
+		env.put("QUERY_STRING", query);
+
+		Process proc = pb.start();		
+		InputStream is = proc.getInputStream();
+		InputStreamReader isr = new InputStreamReader(is);
+		BufferedReader br = new BufferedReader(isr);
+		
+		String line;
+		while ( (line = br.readLine()) != null){
+			// System.out.println(line); // TROCAR
+			output.println(line); // TROCAR
+		}
+
+		output.flush(); // TROCAR
+		br.close();
+	}
+
+	/**
+	 * 1ª Documentação - 24/10/2020, por Victor Koji
+	 * 
+	 * O que faz: Essa função irá abrir um arquivo
+	 * 
+	 * Usado em: 
+	 * @param file - Recebe o um objeto da classe File
+	 * @param outToClient - Recebe o um objeto da classe DataOutputStream
+	 * 
+	 */
+	private void abrirArquivo(File file, DataOutputStream outToClient) throws IOException{
+		/** Inicializa as variáveis para abrir o arquivo **/
+		String fileName = file.getPath();
+		int numOfBytes = (int) file.length();
+		FileInputStream inFile = new FileInputStream(fileName);
+		byte[] fileInBytes = new byte[numOfBytes];
+		String contentType = Files.probeContentType(file.toPath());
+
+		inFile.read(fileInBytes);
+
+		outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n");
+		outToClient.writeBytes("Server: FACOMCD-2020/1.0\r\n");
+		/** Verifica qual é a extensão do arquivo e coloca o content type de acordo essa extensão. **/
+		outToClient.writeBytes("Content-Type: "+contentType+"\r\n");
+
+		/** Adiciona o downlaod do arquivo txt **/
+		if (fileName.endsWith(".txt") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".gif") || fileName.endsWith(".png"))
+			outToClient.writeBytes("Content-Type: multipart/form-data; boundary=something\r\n");
+
+		/** Adiciona o downlaod do arquivo pdf **/
+		if (fileName.endsWith(".pdf"))
+			outToClient.writeBytes("Content-Disposition: attachment; filename="+file.getName()+"\r\n");
+
+		outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
+		
+		outToClient.writeBytes("\r\n");
+		outToClient.write(fileInBytes, 0, numOfBytes);
+	}
+
+	/**
 	 * 1ª Documentação - 19/10/2020, por Victor Koji
 	 * 
 	 * O que faz: Essa função lista os itens de um diretório.
-	 * 
-	 * Usado em: Threads
 	 * 
 	 * @param file - Recebe o um objeto da classe File
 	 * @param outToClient - Recebe o um objeto da classe DataOutputStream
