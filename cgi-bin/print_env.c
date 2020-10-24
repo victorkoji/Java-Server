@@ -3,11 +3,8 @@
 
 int main(int argc, char *argv[], char *envp[])
 {
-	// int i = 0;
+	int i = 0;
 	
-	// while (envp[i])
-	// 	printf("%s\n", envp[i++]);
-
 	printf(
 		"<html xml:lang=\"en\" lang=\"en\">\r\n"
 		"<head>\r\n"
@@ -16,7 +13,10 @@ int main(int argc, char *argv[], char *envp[])
 		"<title>Document</title>\r\n"
 		"</head>\r\n"
 		"<body>\r\n"
-		"<h1>TYESTEEEE</h1>\r\n"
-		"</body>\r\n"
 	);
+	while (envp[i]){
+		printf("<p>%s</p>\n", envp[i++]);
+	}
+	printf("</body>\r\n"
+			"</html>\r\n");
 }
