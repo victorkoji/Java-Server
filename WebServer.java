@@ -53,7 +53,7 @@ class WebServer implements Runnable{
 		String capitalizedSentence = null;
 		BufferedReader inFromClient = null;
 		DataOutputStream outToClient = null;
-
+		PrintStream output = null;
 		try {
 			while(true){
 				// Entrada da informação Client -> Server
@@ -61,6 +61,7 @@ class WebServer implements Runnable{
 
 				// Saída da informação Server -> Client
 				outToClient = new DataOutputStream(connectionSocket.getOutputStream());
+				output = new PrintStream(connectionSocket.getOutputStream());
 			
 				requestMessageLine = inFromClient.readLine();
 			
@@ -98,23 +99,25 @@ class WebServer implements Runnable{
 								query = path[1]; // Depois do ponto de interrogação
 							}
 
+							outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n"); // TROCAR
+							outToClient.writeBytes("Content-Type: text/html\r\n"); // TROCAR
+
 							ProcessBuilder pb = new ProcessBuilder(program);
 							Map<String, String> env = pb.environment();
 							env.put("QUERY_STRING", query);
 
-							// pb.redirectError(new File("error")).redirectOutput(new File("output"));
-
 							Process proc = pb.start();		
-							// obtain the input stream
 							InputStream is = proc.getInputStream();
 							InputStreamReader isr = new InputStreamReader(is);
 							BufferedReader br = new BufferedReader(isr);
-							// read what is returned by the command
+							
 							String line;
 							while ( (line = br.readLine()) != null){
-								System.out.println(line);
+								// System.out.println(line); // TROCAR
+								output.println(line); // TROCAR
+								output.flush(); // TROCAR
 							}
-						
+
 							br.close();
 
 						} else if (file.isDirectory()) { /** Se for um diretório **/
