@@ -112,9 +112,6 @@ public class Client implements Runnable{
 			query = path[1]; // Depois do ponto de interrogação
 		}
 
-		outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n"); 
-		outToClient.writeBytes("Content-Type: text/html\r\n"); 
-
 		ProcessBuilder pb = new ProcessBuilder(program);
 		Map<String, String> env = pb.environment();
 		env.put("QUERY_STRING", query);
@@ -123,11 +120,20 @@ public class Client implements Runnable{
 		InputStream is = proc.getInputStream();
 		InputStreamReader isr = new InputStreamReader(is);
 		BufferedReader br = new BufferedReader(isr);
+		StringBuilder procOutput = new StringBuilder();
 		
 		String line;
 		while ( (line = br.readLine()) != null){
-			output.println(line); 
+			procOutput.append(line);
 		}
+
+		output.println("HTTP/1.0 200 Document Follows\r\n" +
+			"Server: FACOMCD-2020/1.0\r\n" +
+			"Content-Type: text/html\r\n" + 
+			"Content-Length: "+procOutput.toString().length()+"\r\n"
+		);
+
+		output.println(procOutput);
 
 		output.flush(); 
 		br.close();
@@ -219,6 +225,7 @@ public class Client implements Runnable{
 		line += String.format("</body>\r\n");
 
 		outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n" +
+			"Server: FACOMCD-2020/1.0\r\n" +
 			"Content-Type: text/html\r\n" +
 			"Content-Length: " + line.length() + "\r\n\r\n"
 		);
