@@ -9,8 +9,8 @@ class WebServer implements Runnable{
 	private Socket connectionSocket;
 
 	/** Inicializa a conexão com o socket **/
-	public WebServer(Socket connec) {
-		socket.setSoTimeout();
+	public WebServer(Socket connec) throws SocketException {
+		connec.setSoTimeout(10 * 1000);
 		this.connectionSocket = connec;
 	}
 
@@ -21,8 +21,7 @@ class WebServer implements Runnable{
 
 			// Listen(escuta) a porta 8080 => Aceita a conexão na porta passada abaixo
 			ServerSocket listenSocket = new ServerSocket(porta);
-			listenSocket.setSoTimeout(2000);
-			
+
 			System.err.println("Servidor rodando...");
 			System.err.println("Porta: " + porta);
 
@@ -62,20 +61,15 @@ class WebServer implements Runnable{
 			while(true){
 				// Entrada da informação Client -> Server
 				inFromClient = new BufferedReader(new InputStreamReader(connectionSocket.getInputStream()));
-
 				// Saída da informação Server -> Client
 				outToClient = new DataOutputStream(connectionSocket.getOutputStream());
-			
-				requestMap = getHeadersInfo(inFromClient);
-				// System.out.println(requestMap.get("Connection"));
 
 				requestMessageLine = inFromClient.readLine();
-			
-				if (requestMessageLine.equals("exit")){
-					outToClient.writeBytes("Conexao finalizada . . .");
-					break;
-				}
-				
+				// requestMap = getHeadersInfo(inFromClient);
+				// setTypeConnection(requestMap.get("Connection"));
+				// setTypeConnection("keep-alive");
+
+				System.out.printf("Porta Socket: %s\n", connectionSocket.getPort() );
 				System.out.println(requestMessageLine);
 
 				StringTokenizer tokenizedLine = new StringTokenizer(requestMessageLine);
@@ -109,8 +103,6 @@ class WebServer implements Runnable{
 						else
 							abrirArquivo(file, outToClient);
 						
-
-						connectionSocket.close();
 					}
 					catch (IOException e) {
 						outToClient.writeBytes("HTTP/1.1 404 File not found\r\n" +
@@ -123,33 +115,17 @@ class WebServer implements Runnable{
 				else
 					System.out.println("Bad Request Message");
 			}
+		} catch (SocketTimeoutException ste) {
+			try{
+				System.out.println("Sessão Expirada!");
+				connectionSocket.close();
+			}catch (Exception e) {
+				System.out.println("Não foi possível fechar!");
+			}
 		} catch (Exception e) {
 			System.out.println("Error: " + e);
 		}
 	}
-
-	private Map<String, String> getHeadersInfo(BufferedReader request) throws IOException {
-
-        Map<String, String> map = new HashMap<String, String>();
-		
-		String line = ""; 
-		while ( (line = request.readLine()) != null){
-			String[] content = new String[2];
-			content = line.split(":");
-			System.out.println(content.length);
-			// String key = content[0];
-			// String value = "";
-
-			// if(content[1] != null){
-			// 	value = content[1];
-			// }
-			// System.out.println(value);
-
-			// map.put(key, value);
-		}
-
-        return map;
-    }
 
 	/**
 	 * 1ª Documentação - 24/10/2020, por Victor Koji
@@ -281,5 +257,15 @@ class WebServer implements Runnable{
 		line += String.format("</table>\n");
 		outToClient.writeBytes(line);
 		outToClient.writeBytes("</body>\r\n");
+	}
+	
+	private void setTypeConnection(String connecType) throws IOException{
+
+		if(connecType.equals("keep-alive")){
+			this.connectionSocket.setKeepAlive(true);
+		}else{
+			this.connectionSocket.setKeepAlive(false);
+		}
+
 	}
 }
