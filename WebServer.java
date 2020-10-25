@@ -32,13 +32,13 @@ class WebServer implements Runnable{
 					case "-t": // Cria Threads
 
 						// Cria-se um objeto socket
-						WebServer myServer = new WebServer(listenSocket.accept()); 
+						WebServer server = new WebServer(listenSocket.accept()); 
 						
 						// Cria-se Threads para realizar novas conexões para cada Client
-						Thread thread = new Thread(myServer);
+						Thread clientThread = new Thread(server);
 
 						// Inicia usando o método 'public void run()'
-						thread.start();
+						clientThread.start();
 						break;
 				}
 			}
@@ -155,11 +155,10 @@ class WebServer implements Runnable{
 		
 		String line;
 		while ( (line = br.readLine()) != null){
-			// System.out.println(line); // TROCAR
-			output.println(line); // TROCAR
+			output.println(line); 
 		}
 
-		output.flush(); // TROCAR
+		output.flush(); 
 		br.close();
 	}
 
@@ -183,11 +182,12 @@ class WebServer implements Runnable{
 
 		inFile.read(fileInBytes);
 
-		outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n");
-		outToClient.writeBytes("Server: FACOMCD-2020/1.0\r\n");
-		/** Verifica qual é a extensão do arquivo e coloca o content type de acordo essa extensão. **/
-		outToClient.writeBytes("Content-Type: "+contentType+"\r\n");
+		outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n" +
+			"Server: FACOMCD-2020/1.0\r\n" +
+			"Content-Type: "+contentType+"\r\n"
+		);
 
+		/** Verifica qual é a extensão do arquivo e coloca o content type de acordo essa extensão. **/
 		/** Adiciona o downlaod do arquivo txt **/
 		if (fileName.endsWith(".txt") || fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".gif") || fileName.endsWith(".png"))
 			outToClient.writeBytes("Content-Type: multipart/form-data; boundary=something\r\n");
@@ -196,9 +196,7 @@ class WebServer implements Runnable{
 		if (fileName.endsWith(".pdf"))
 			outToClient.writeBytes("Content-Disposition: attachment; filename="+file.getName()+"\r\n");
 
-		outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n");
-		
-		outToClient.writeBytes("\r\n");
+		outToClient.writeBytes("Content-Length: " + numOfBytes + "\r\n\r\n");
 		outToClient.write(fileInBytes, 0, numOfBytes);
 	}
 
@@ -214,7 +212,12 @@ class WebServer implements Runnable{
 		String[] names = file.list();
 		File[] caminhos = file.listFiles();
 
-		/** Monta a header **/
+		/** Busca o caminho pai para podemos fazer o botão de voltar. **/
+		String pathVoltar = file.getParent();
+		if(pathVoltar == null)
+			pathVoltar = "./public";
+
+		/** Monta a header e o começo do body **/
 		outToClient.writeBytes(
 			"HTTP/1.0 200 Document Follows\r\n" +
 			"Content-Type: text/html\r\n\r\n" +
@@ -222,11 +225,12 @@ class WebServer implements Runnable{
 			"<head>\r\n" +
 			"<title>Linux/kernel/ - Linux Cross Reference - Free Electrons</title>\r\n" +
 			"</head>\r\n" +
-			"<body>\r\n"
+			"<body>\r\n" +
+			"<table>\n" + 
+			"<tr><th>Nome</th><th>Tipo</th></tr>\n"
 		);
-		String line = String.format("<table>\n");
-		line += String.format("<tr><th>Nome</th><th>Tipo</th></tr>\n");
-
+		
+		String line = "";
 		/** Percorre os itens que estão dentro do diretório **/
 		for (int i = 0; i < names.length; i++) {
 			Path path = caminhos[i].toPath();
@@ -240,11 +244,7 @@ class WebServer implements Runnable{
 			line += String.format("<tr><td><a href=\"/%s/%s\">%s</a></td><td>%s</td></tr>\n", file, names[i], names[i], contentType);
 		}
 
-		/** Busca o caminho pai para podemos fazer o botão de voltar. **/
-		String pathVoltar = file.getParent();
-		if(pathVoltar == null)
-			pathVoltar = "./public";
-
+		/** Adiciona o voltar **/
 		line += String.format("<tr><td><a href=\"/%s\">Voltar</a></td></tr>\n", pathVoltar);
 		line += String.format("</table>\n");
 		outToClient.writeBytes(line);
