@@ -89,8 +89,6 @@ public class Client implements Runnable{
 	}
 
 	/**
-	 * 1ª Documentação - 24/10/2020, por Victor Koji
-	 * 
 	 * O que faz: Essa função irá executar um arquivo cgi e retorna a saida para o client
 	 * 
 	 * Usado em: 
@@ -138,8 +136,6 @@ public class Client implements Runnable{
 	}
 
 	/**
-	 * 1ª Documentação - 24/10/2020, por Victor Koji
-	 * 
 	 * O que faz: Essa função irá abrir um arquivo
 	 * 
 	 * Usado em: 
@@ -176,8 +172,6 @@ public class Client implements Runnable{
 	}
 
 	/**
-	 * 1ª Documentação - 19/10/2020, por Victor Koji
-	 * 
 	 * O que faz: Essa função lista os itens de um diretório.
 	 * 
 	 * @param file - Recebe o um objeto da classe File
@@ -214,11 +208,11 @@ public class Client implements Runnable{
 				contentType = "Pasta";
 
 			/** Cria os links para a pasta ou arquivos **/
-			line += String.format("<tr><td><a href=\"/%s/%s\">%s</a></td><td>%s</td></tr>\n", file, names[i], names[i], contentType);
+			line += String.format("<tr><td><h2><a href=\"/%s/%s\">%s</a></h2></td><td><h3>%s</h3></td></tr>\n", file, names[i], names[i], contentType);
 		}
 
 		/** Adiciona o voltar **/
-		line += String.format("<tr><td><a href=\"/%s\">Voltar</a></td></tr>\n", pathVoltar);
+		line += String.format("<tr><td><h2><a href=\"/%s\">Voltar</a></h2></td></tr>\n", pathVoltar);
 		line += String.format("</table>\n");
 		line += String.format("</body>\r\n");
 
