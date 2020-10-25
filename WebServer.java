@@ -131,16 +131,19 @@ class WebServer implements Runnable{
 		
 		String line = ""; 
 		while ( (line = request.readLine()) != null){
-			String[] content = line.split(":");
-			String key = content[0];
-			String value = "";
+			String[] content = new String[2];
+			content = line.split(":");
+			content
+			System.out.println(content.length());
+			// String key = content[0];
+			// String value = "";
 
 			// if(content[1] != null){
 			// 	value = content[1];
 			// }
-			System.out.println(key);
+			// System.out.println(value);
 
-			map.put(key, value);
+			// map.put(key, value);
 		}
 
         return map;
