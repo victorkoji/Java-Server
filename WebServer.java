@@ -10,6 +10,7 @@ class WebServer implements Runnable{
 
 	/** Inicializa a conexão com o socket **/
 	public WebServer(Socket connec) {
+		socket.setSoTimeout();
 		this.connectionSocket = connec;
 	}
 
@@ -20,6 +21,8 @@ class WebServer implements Runnable{
 
 			// Listen(escuta) a porta 8080 => Aceita a conexão na porta passada abaixo
 			ServerSocket listenSocket = new ServerSocket(porta);
+			listenSocket.setSoTimeout(2000);
+			
 			System.err.println("Servidor rodando...");
 			System.err.println("Porta: " + porta);
 
@@ -133,8 +136,7 @@ class WebServer implements Runnable{
 		while ( (line = request.readLine()) != null){
 			String[] content = new String[2];
 			content = line.split(":");
-			content
-			System.out.println(content.length());
+			System.out.println(content.length);
 			// String key = content[0];
 			// String value = "";
 
