@@ -53,6 +53,8 @@ class WebServer implements Runnable{
 		String capitalizedSentence = null;
 		BufferedReader inFromClient = null;
 		DataOutputStream outToClient = null;
+		Map<String, String> requestMap = new HashMap<String, String>();
+
 		try {
 			while(true){
 				// Entrada da informação Client -> Server
@@ -61,6 +63,9 @@ class WebServer implements Runnable{
 				// Saída da informação Server -> Client
 				outToClient = new DataOutputStream(connectionSocket.getOutputStream());
 			
+				requestMap = getHeadersInfo(inFromClient);
+				// System.out.println(requestMap.get("Connection"));
+
 				requestMessageLine = inFromClient.readLine();
 			
 				if (requestMessageLine.equals("exit")){
@@ -105,10 +110,11 @@ class WebServer implements Runnable{
 						connectionSocket.close();
 					}
 					catch (IOException e) {
-						outToClient.writeBytes("HTTP/1.1 404 File not found\r\n");
-						outToClient.writeBytes("Server: FACOMCD-2020/1.0\r\n");
-						outToClient.writeBytes("Content-Type: text/plain\r\n");
-						outToClient.writeBytes("Nao pode encontrar essa url\r\n");
+						outToClient.writeBytes("HTTP/1.1 404 File not found\r\n" +
+							"Server: FACOMCD-2020/1.0\r\n" +
+							"Content-Type: text/plain\r\n" + 
+							"Nao pode encontrar essa url\r\n"
+						);
 					}
 				}
 				else
@@ -118,6 +124,27 @@ class WebServer implements Runnable{
 			System.out.println("Error: " + e);
 		}
 	}
+
+	private Map<String, String> getHeadersInfo(BufferedReader request) throws IOException {
+
+        Map<String, String> map = new HashMap<String, String>();
+		
+		String line = ""; 
+		while ( (line = request.readLine()) != null){
+			String[] content = line.split(":");
+			String key = content[0];
+			String value = "";
+
+			// if(content[1] != null){
+			// 	value = content[1];
+			// }
+			System.out.println(key);
+
+			map.put(key, value);
+		}
+
+        return map;
+    }
 
 	/**
 	 * 1ª Documentação - 24/10/2020, por Victor Koji
