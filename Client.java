@@ -45,19 +45,21 @@ public class Client implements Runnable{
 					try {
 						File file = new File(fileName);
 
-						//getParent -> retorna valores, digamos, por cada diretorio
-						//Exemplo: [pasta1],[pasta2],[cgi-bin]
-
-						//getPath -> retorna GERAL, pegando tudo depois de localhost
-						//Exemplo: /pasta1/pasta2/cgi-bin
-
-						/** Verifica se o getParent é diferente de nulo e se é dentro do cgi-bin, executamos o script **/
-						if(file.getParent() != null && file.getParent().equals("cgi-bin")){
+						/** Se for um diretório **/
+						if (file.isDirectory()) {
+							listarItensDiretorio(file, outToClient);
+						}
+						/** Se não for um diretório e possui o cgi-bin, quer dizer que está tentando executar um programa **/
+						else if(file.getPath().indexOf("cgi-bin") != -1){
 							executarProgramaCgiBin(file, outToClient);
 						}
-						/** Se for um diretório **/
-						else if (file.isDirectory()) {
-							listarItensDiretorio(file, outToClient);
+						/** Se for um arquivo **/
+						else{
+							abrirArquivo(file, outToClient);
+						}
+						/** Verifica se o getParent é diferente de nulo e se é dentro do cgi-bin, executamos o script **/
+						else if(file.getPath().indexOf("cgi-bin") != -1){
+							executarProgramaCgiBin(file, outToClient);
 						}
 						/** Se for um arquivo **/
 						else{
