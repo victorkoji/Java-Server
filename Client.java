@@ -32,15 +32,6 @@ public class Client implements Runnable{
 				outToClient = new DataOutputStream(connectionSocket.getOutputStream());
 
 				requestMessageLine = inFromClient.readLine();
-				StringBuilder request = new StringBuilder();
-
-				// while ((inputLine = in.readLine()) != null) {
-				// 	request.append(inputLine).append("\r\n");
-				// }
-
-				System.out.printf("Porta Socket: %s\n", connectionSocket.getPort() );
-				System.out.println(requestMessageLine);
-
 				StringTokenizer tokenizedLine = new StringTokenizer(requestMessageLine);
 
 				if (tokenizedLine.nextToken().equals("GET")) {
@@ -61,16 +52,19 @@ public class Client implements Runnable{
 						//Exemplo: /pasta1/pasta2/cgi-bin
 
 						/** Verifica se o getParent é diferente de nulo e se é dentro do cgi-bin, executamos o script **/
-						if(file.getParent() != null && file.getParent().equals("cgi-bin"))
+						if(file.getParent() != null && file.getParent().equals("cgi-bin")){
 							executarProgramaCgiBin(file, outToClient);
+						}
 
 						/** Se for um diretório **/
-						else if (file.isDirectory()) 
+						else if (file.isDirectory()) {
 							listarItensDiretorio(file, outToClient);
+						}
 
 						/** Se for um arquivo **/
-						else
+						else{
 							abrirArquivo(file, outToClient);
+						}
 						
 					}
 					catch (IOException e) {
@@ -86,8 +80,8 @@ public class Client implements Runnable{
 			}
 		} catch (SocketTimeoutException ste) {
 			try{
-				System.out.println("Sessão Expirada!");
 				connectionSocket.close();
+				System.out.println("Sessão Expirada!");
 			}catch (Exception e) {
 				System.out.println("Não foi possível fechar!");
 			}
@@ -118,8 +112,8 @@ public class Client implements Runnable{
 			query = path[1]; // Depois do ponto de interrogação
 		}
 
-		outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n"); // TROCAR
-		outToClient.writeBytes("Content-Type: text/html\r\n"); // TROCAR
+		outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n"); 
+		outToClient.writeBytes("Content-Type: text/html\r\n"); 
 
 		ProcessBuilder pb = new ProcessBuilder(program);
 		Map<String, String> env = pb.environment();
@@ -186,6 +180,7 @@ public class Client implements Runnable{
 	 * @param outToClient - Recebe o um objeto da classe DataOutputStream
 	 */
 	private void listarItensDiretorio(File file, DataOutputStream outToClient) throws IOException{
+		String line = "";
 		String[] names = file.list();
 		File[] caminhos = file.listFiles();
 
@@ -193,12 +188,10 @@ public class Client implements Runnable{
 		String pathVoltar = file.getParent();
 		if(pathVoltar == null)
 			pathVoltar = "./public";
-
+		
 		/** Monta a header e o começo do body **/
-		outToClient.writeBytes(
-			"HTTP/1.0 200 Document Follows\r\n" +
-			"Content-Type: text/html\r\n\r\n" +
-			"<html  xml:lang=\"en\" lang=\"en\">\r\n" +
+		line = String.format(
+			"<html>" +
 			"<head>\r\n" +
 			"<title>Linux/kernel/ - Linux Cross Reference - Free Electrons</title>\r\n" +
 			"</head>\r\n" +
@@ -207,7 +200,6 @@ public class Client implements Runnable{
 			"<tr><th>Nome</th><th>Tipo</th></tr>\n"
 		);
 		
-		String line = "";
 		/** Percorre os itens que estão dentro do diretório **/
 		for (int i = 0; i < names.length; i++) {
 			Path path = caminhos[i].toPath();
@@ -224,16 +216,12 @@ public class Client implements Runnable{
 		/** Adiciona o voltar **/
 		line += String.format("<tr><td><a href=\"/%s\">Voltar</a></td></tr>\n", pathVoltar);
 		line += String.format("</table>\n");
-		outToClient.writeBytes(line);
-		outToClient.writeBytes("</body>\r\n");
-	}
-	
-	private void setTypeConnection(String connecType) throws IOException{
+		line += String.format("</body>\r\n");
 
-		if(connecType.equals("keep-alive")){
-			this.connectionSocket.setKeepAlive(true);
-		}else{
-			this.connectionSocket.setKeepAlive(false);
-		}
+		outToClient.writeBytes("HTTP/1.0 200 Document Follows\r\n" +
+			"Content-Type: text/html\r\n" +
+			"Content-Length: " + line.length() + "\r\n\r\n"
+		);
+		outToClient.writeBytes(line);
 	}
 }
