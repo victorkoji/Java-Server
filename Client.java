@@ -55,12 +55,10 @@ public class Client implements Runnable{
 						if(file.getParent() != null && file.getParent().equals("cgi-bin")){
 							executarProgramaCgiBin(file, outToClient);
 						}
-
 						/** Se for um diretório **/
 						else if (file.isDirectory()) {
 							listarItensDiretorio(file, outToClient);
 						}
-
 						/** Se for um arquivo **/
 						else{
 							abrirArquivo(file, outToClient);
