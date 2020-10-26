@@ -57,15 +57,6 @@ public class Client implements Runnable{
 						else{
 							abrirArquivo(file, outToClient);
 						}
-						/** Verifica se o getParent é diferente de nulo e se é dentro do cgi-bin, executamos o script **/
-						else if(file.getPath().indexOf("cgi-bin") != -1){
-							executarProgramaCgiBin(file, outToClient);
-						}
-						/** Se for um arquivo **/
-						else{
-							abrirArquivo(file, outToClient);
-						}
-						
 					}
 					catch (IOException e) {
 						outToClient.writeBytes("HTTP/1.1 404 File not found\r\n" +
